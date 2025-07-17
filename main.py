@@ -136,11 +136,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     with open(caminho_saida, "rb") as foto:
         await update.message.reply_photo(photo=foto, caption=legenda)
 
-if __name__ == "__main__":
+import asyncio
+
+async def main():
     app = ApplicationBuilder().token(TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("Bot iniciado...")
-    app.run_polling()
+    await app.run_polling()
+
+if __name__ == "__main__":
+    asyncio.run(main())
 

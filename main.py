@@ -12,7 +12,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-TOKEN = "7940155943:AAGKiryG4vcKf0WPPDY97q3zPlWtkjWa0Fg"
+TOKEN = "8067364088:AAGdZQM16UncqNYE77DzHKqh9Kur8tr0-Hw"
 
 def pegar_dados_shopee(url):
     headers = {

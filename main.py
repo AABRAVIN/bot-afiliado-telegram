@@ -143,3 +143,4 @@ if __name__ == "__main__":
 
     print("Bot iniciado...")
     app.run_polling()
+

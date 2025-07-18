@@ -1,32 +1,26 @@
-# Arquivo: bot.py (Versão Otimizada para Inicialização Rápida no Render)
+# Arquivo: bot.py (Versão final com depuração)
 import os
 import threading
 from flask import Flask
 
-# --- PARTE 1: O SERVIDOR WEB (A COISA MAIS IMPORTANTE PRIMEIRO) ---
-# Inicia o servidor imediatamente para responder ao Render
+print("Script bot.py iniciado.")
 
+# --- PARTE 1: O SERVIDOR WEB ---
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    # Esta rota diz ao Render que o serviço está vivo
-    return "O servidor web está no ar. O bot está iniciando em segundo plano."
+    return "Servidor web no ar. Bot em execução."
 
 def run_web_server():
-    # O Render espera a porta 10000
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
 
-# Inicia o servidor web em um thread separado para não bloquear o resto do código
 web_thread = threading.Thread(target=run_web_server)
 web_thread.start()
+print("Servidor web iniciado em thread. Prosseguindo com a inicialização do bot...")
 
-# --- PARTE 2: INICIALIZAÇÃO DO BOT (só depois que o servidor está no ar) ---
-# Todas as importações e configurações do bot vêm aqui
-
-print("Servidor web iniciado. Agora, inicializando o bot...")
-
+# --- PARTE 2: INICIALIZAÇÃO DO BOT ---
 import telebot
 import json
 import requests
@@ -36,22 +30,30 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 
 # --- Carregando Token ---
+print("Tentando carregar o token do config.json...")
 try:
     with open("config.json") as f:
         config = json.load(f)
     TELEGRAM_TOKEN = config["telegram"]["token"]
-except FileNotFoundError:
-    print("ERRO CRÍTICO: O arquivo 'config.json' não foi encontrado.")
-    # Não vamos parar o programa, mas o bot não vai funcionar.
+    if not TELEGRAM_TOKEN or len(TELEGRAM_TOKEN.split(':')) != 2:
+        print("ERRO: O token carregado do config.json parece ser inválido ou está vazio.")
+        TELEGRAM_TOKEN = None
+    else:
+        print("Token carregado com sucesso!")
+except Exception as e:
+    print(f"ERRO CRÍTICO AO LER config.json: {e}")
     TELEGRAM_TOKEN = None
 
-# Só continua se o token foi carregado
+# Só continua se o token foi carregado corretamente
 if TELEGRAM_TOKEN:
+    print("Inicializando o objeto 'bot' do TeleBot...")
     bot = telebot.TeleBot(TELEGRAM_TOKEN, parse_mode='Markdown')
+    print("Objeto 'bot' inicializado.")
 
     # --- Funções do Bot (sem mudanças) ---
     def criar_imagem_anuncio(imagem_produto_url, preco, caminho_fundo="fundo.jpg", caminho_logo="logo.png", caminho_fonte="font.ttf"):
         try:
+            # (código da função sem alterações)
             fundo = Image.open(caminho_fundo).convert("RGBA")
             logo = Image.open(caminho_logo).convert("RGBA")
             response = requests.get(imagem_produto_url)
@@ -83,10 +85,11 @@ if TELEGRAM_TOKEN:
             final_image_stream.seek(0)
             return final_image_stream
         except Exception as e:
-            print(f"Erro ao criar imagem: {e}")
+            print(f"ERRO DENTRO DE criar_imagem_anuncio: {e}")
             return None
 
     def extrair_dados_shopee(url):
+        # (código da função sem alterações)
         try:
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
             response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
@@ -100,15 +103,18 @@ if TELEGRAM_TOKEN:
             preco = match.group(0).replace(',', '.') if match else "N/D"
             return {"titulo": titulo, "preco": preco, "imagem_url": imagem_url}
         except Exception as e:
-            print(f"Erro ao extrair dados da Shopee: {e}")
+            print(f"ERRO DENTRO DE extrair_dados_shopee: {e}")
             return None
 
     @bot.message_handler(commands=['start', 'help'])
     def send_welcome(message):
+        print("Comando /start recebido. Respondendo...")
         bot.reply_to(message, "👋 Olá! Sou seu designer de posts. Me envie um link de afiliado da Shopee e eu criarei um anúncio personalizado!")
 
     @bot.message_handler(func=lambda message: re.search(r'shopee\.com', message.text))
     def criar_post_afiliado(message):
+        print(f"Link da Shopee recebido: {message.text}")
+        # (código da função sem alterações)
         link_original = message.text
         msg_espera = bot.reply_to(message, "🎨 Recebido! Preparando sua arte personalizada...")
         dados_produto = extrair_dados_shopee(link_original)
@@ -124,8 +130,8 @@ if TELEGRAM_TOKEN:
             bot.delete_message(chat_id=msg_espera.chat.id, message_id=msg_espera.message_id)
             bot.reply_to(message, "❌ Desculpe, não consegui extrair as informações do link.")
 
-    print("Iniciando o polling do bot...")
+    print("Tudo pronto. Chamando bot.infinity_polling() para iniciar o recebimento de mensagens...")
     bot.infinity_polling()
 
 else:
-    print("Bot não iniciado devido à falta do token do Telegram.")
+    print("FINALIZANDO: Bot não foi iniciado devido à falta de um token válido.")

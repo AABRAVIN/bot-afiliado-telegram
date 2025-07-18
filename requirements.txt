@@ -1,5 +1,5 @@
-python-telegram-bot==20.7
-Flask
+pyTelegramBotAPI
 beautifulsoup4
-Pillow
+lxml
 requests
+Pillow

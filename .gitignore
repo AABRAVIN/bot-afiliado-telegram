@@ -1,0 +1,13 @@
+# Arquivo de configuração com segredos
+config.json
+
+# Cache e arquivos do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ambientes virtuais
+venv/
+*.venv
+env/

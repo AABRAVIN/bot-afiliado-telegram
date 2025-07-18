@@ -1,6 +1,4 @@
 pyTelegramBotAPI
-beautifulsoup4
-lxml
 requests
 Pillow
 Flask
